@@ -1,0 +1,195 @@
+
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Wins & Mastery</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <style>
+    :root {
+      --font-display: 'Lexend', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --bg-deep: #080d0a;
+      --bg-card: #111a14;
+      --accent: #30e86e;
+      --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    body {
+      font-family: var(--font-body);
+      background-color: var(--bg-deep);
+      color: #f8faf9;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+    h1, h2, h3, h4, .font-display {
+      font-family: var(--font-display);
+    }
+    ::selection {
+      background: var(--accent);
+      color: var(--bg-deep);
+    }
+
+    /* Standard Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #222d26;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #304034;
+    }
+
+    /* Scroll Chassis: Intentional Horizontal Container */
+    .scroll-chassis {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x proximity;
+      overscroll-behavior-x: contain;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 1rem; /* Space for scrollbar */
+      mask-image: linear-gradient(to right, black 0%, black 90%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, black 0%, black 90%, transparent 100%);
+    }
+
+    /* Hide scrollbar for mobile within the chassis but keep functionality */
+    @media (max-width: 768px) {
+      .scroll-chassis::-webkit-scrollbar {
+        display: none;
+      }
+      .scroll-chassis {
+        scrollbar-width: none;
+        mask-image: linear-gradient(to right, black 80%, transparent 100%);
+        -webkit-mask-image: linear-gradient(to right, black 80%, transparent 100%);
+      }
+    }
+
+    .glass {
+      background: rgba(17, 26, 20, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: all 200ms var(--ease-out-expo);
+    }
+    
+    .glass:hover {
+      transform: scale(1.03);
+      border-color: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), 0 0 20px rgba(48, 232, 110, 0.03);
+    }
+
+    .glass:active {
+      transform: scale(0.98);
+      transition-duration: 150ms;
+    }
+
+    .filled-icon {
+      font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .animate-fade-in-up {
+      animation: fadeInUp 250ms var(--ease-out-expo) forwards;
+    }
+
+    @keyframes pulse-once {
+      0% { border-color: rgba(48, 232, 110, 0.2); box-shadow: 0 0 0 0 rgba(48, 232, 110, 0.2), 0 20px 40px -15px rgba(0, 0, 0, 0.5); }
+      70% { border-color: rgba(48, 232, 110, 0.5); box-shadow: 0 0 30px 20px rgba(48, 232, 110, 0), 0 20px 40px -15px rgba(0, 0, 0, 0.5); }
+      100% { border-color: rgba(48, 232, 110, 0.2); box-shadow: 0 0 0 0 rgba(48, 232, 110, 0), 0 20px 40px -15px rgba(0, 0, 0, 0.5); }
+    }
+    .animate-pulse-once {
+      animation: pulse-once 1.5s var(--ease-out-expo);
+    }
+
+    /* PDF Print Optimization */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 1cm;
+      }
+      body {
+        background-color: white !important;
+        color: black !important;
+      }
+      .no-print, header, aside, .floating-nav {
+        display: none !important;
+      }
+      main {
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      .glass {
+        background: transparent !important;
+        border: 1px solid #eee !important;
+        backdrop-filter: none !important;
+        box-shadow: none !important;
+      }
+      .printable-report {
+        display: block !important;
+        width: 100% !important;
+      }
+      h1, h2, h3, h4, h5, p, span {
+        color: black !important;
+      }
+      .text-emerald-400 {
+        color: #059669 !important;
+      }
+      .text-blue-400 {
+        color: #2563eb !important;
+      }
+      .text-rose-500 {
+        color: #dc2626 !important;
+      }
+      .bg-emerald-400 {
+        background-color: #30e86e !important;
+        -webkit-print-color-adjust: exact;
+      }
+      .bg-white\/5 {
+        background-color: #f9fafb !important;
+      }
+      .border-white\/10 {
+        border-color: #e5e7eb !important;
+      }
+      canvas {
+        max-width: 100% !important;
+        height: auto !important;
+      }
+      .recharts-cartesian-grid-horizontal line,
+      .recharts-cartesian-grid-vertical line {
+        stroke: #f3f4f6 !important;
+      }
+    }
+  </style>
+<script type="importmap">
+{
+  "imports": {
+    "recharts": "https://esm.sh/recharts@^3.7.0",
+    "jspdf": "https://esm.sh/jspdf@^2.5.1",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.40.0"
+  }
+}
+</script>
+</head>
+<body>
+  <div id="root"></div>
+</body>
+</html>

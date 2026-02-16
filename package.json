@@ -1,0 +1,22 @@
+
+{
+  "name": "daily-wins-mastery",
+  "version": "1.0.0",
+  "description": "ADHD-friendly mastery dashboard with trading journal and future letters.",
+  "main": "index.tsx",
+  "dependencies": {
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "recharts": "^3.7.0",
+    "@google/genai": "^1.40.0"
+  },
+  "keywords": [
+    "ADHD",
+    "Productivity",
+    "Trading Journal",
+    "Mastery",
+    "Habit Tracker"
+  ],
+  "author": "MasteryHub User",
+  "license": "MIT"
+}

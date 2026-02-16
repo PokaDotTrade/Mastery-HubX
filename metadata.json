@@ -1,0 +1,7 @@
+{
+  "name": "1 Copy of Copy of Daily Wins & Mastery",
+  "description": "A minimalist, ADHD-friendly dashboard for tracking daily wins, mastery habits, a 100-envelope savings challenge, visual budgeting, and a professional trading journal.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
