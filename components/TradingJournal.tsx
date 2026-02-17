@@ -13,6 +13,7 @@ interface TradingJournalProps {
   onAddTrade?: (trade: Trade) => void;
   onDeleteTrade?: (id: string) => void;
   onAddStrategy?: (strategy: Strategy) => void;
+  onUpdateStrategy?: (id: string, updates: Partial<Strategy>) => void;
   onDeleteStrategy?: (id: string) => void;
   onAddAccount?: (account: TradingAccount) => void;
   onDeleteAccount?: (id: string) => void;
@@ -34,6 +35,7 @@ const TradingJournal: React.FC<TradingJournalProps> = ({
   onSelectAccount,
   onUpdateAccount,
   onAddStrategy,
+  onUpdateStrategy,
   onDeleteStrategy
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('dashboard');
@@ -52,9 +54,15 @@ const TradingJournal: React.FC<TradingJournalProps> = ({
   // Playbook Extension State
   const [selectedStrategyId, setSelectedStrategyId] = useState<string | null>(null);
   const [isAddingStrategy, setIsAddingStrategy] = useState(false);
-  const [newStrategyName, setNewStrategyName] = useState('');
-  const [newStrategyConditions, setNewStrategyConditions] = useState('');
-  const [newStrategyRisk, setNewStrategyRisk] = useState('');
+  const [editingStrategy, setEditingStrategy] = useState<Strategy | null>(null);
+
+  // Strategy Form State
+  const [newStrategyTitle, setNewStrategyTitle] = useState('');
+  const [newStrategyMarketCondition, setNewStrategyMarketCondition] = useState('');
+  const [newStrategyEntryCriteria, setNewStrategyEntryCriteria] = useState('');
+  const [newStrategyTimeframe, setNewStrategyTimeframe] = useState('');
+  const [newStrategyRiskModel, setNewStrategyRiskModel] = useState('');
+  const [newStrategyNotes, setNewStrategyNotes] = useState('');
   const [newStrategyTag, setNewStrategyTag] = useState('Scalp');
   const [newStrategyModelImage, setNewStrategyModelImage] = useState<string | null>(null);
   const strategyModelInputRef = useRef<HTMLInputElement>(null);
@@ -71,6 +79,36 @@ const TradingJournal: React.FC<TradingJournalProps> = ({
   const [newPhase1Target, setNewPhase1Target] = useState('');
   const [newPhase2Target, setNewPhase2Target] = useState('');
   const [newPhase3Target, setNewPhase3Target] = useState('');
+
+  const resetStrategyForm = () => {
+    setNewStrategyTitle('');
+    setNewStrategyMarketCondition('');
+    setNewStrategyEntryCriteria('');
+    setNewStrategyTimeframe('');
+    setNewStrategyRiskModel('');
+    setNewStrategyNotes('');
+    setNewStrategyTag('Scalp');
+    setNewStrategyModelImage(null);
+  };
+
+  const handleOpenNewStrategy = () => {
+    setEditingStrategy(null);
+    resetStrategyForm();
+    setIsAddingStrategy(true);
+  };
+
+  const handleOpenEditStrategy = (strat: Strategy) => {
+    setEditingStrategy(strat);
+    setNewStrategyTitle(strat.title);
+    setNewStrategyMarketCondition(strat.marketCondition || '');
+    setNewStrategyEntryCriteria(strat.entryCriteria || '');
+    setNewStrategyTimeframe(strat.timeframe || '');
+    setNewStrategyRiskModel(strat.riskModel || '');
+    setNewStrategyNotes(strat.notes || '');
+    setNewStrategyTag(strat.tag);
+    setNewStrategyModelImage(strat.modelImage || null);
+    setIsAddingStrategy(true);
+  };
 
   const handleAddAccountSubmit = () => {
     if (!newAccName || !newAccBalance) return;
@@ -120,23 +158,40 @@ const TradingJournal: React.FC<TradingJournalProps> = ({
   };
 
   const handleAddStrategySubmit = () => {
-    if (!newStrategyName.trim()) return;
-    const newStrat: Strategy = {
-      id: `strat_${Date.now()}`,
-      title: newStrategyName,
-      description: 'Defined algorithmic edge.',
-      tag: newStrategyTag,
-      image: newStrategyModelImage || 'https://images.unsplash.com/photo-1611974717482-5813e33b00f7?q=80&w=2000&auto=format&fit=crop',
-      modelImage: newStrategyModelImage || undefined,
-      notes: newStrategyConditions,
-      riskModel: newStrategyRisk
-    };
-    onAddStrategy?.(newStrat);
+    if (!newStrategyTitle.trim()) return;
+
+    if (editingStrategy) {
+      const updatedData = {
+        title: newStrategyTitle,
+        marketCondition: newStrategyMarketCondition,
+        entryCriteria: newStrategyEntryCriteria,
+        timeframe: newStrategyTimeframe,
+        riskModel: newStrategyRiskModel,
+        notes: newStrategyNotes,
+        tag: newStrategyTag,
+        modelImage: newStrategyModelImage,
+        image: newStrategyModelImage || editingStrategy.image,
+      };
+      onUpdateStrategy?.(editingStrategy.id, updatedData);
+    } else {
+      const newStrat: Strategy = {
+        id: `strat_${Date.now()}`,
+        title: newStrategyTitle,
+        description: 'Defined algorithmic edge.',
+        tag: newStrategyTag,
+        image: newStrategyModelImage || 'https://images.unsplash.com/photo-1611974717482-5813e33b00f7?q=80&w=2000&auto=format&fit=crop',
+        modelImage: newStrategyModelImage || undefined,
+        marketCondition: newStrategyMarketCondition,
+        entryCriteria: newStrategyEntryCriteria,
+        timeframe: newStrategyTimeframe,
+        riskModel: newStrategyRiskModel,
+        notes: newStrategyNotes,
+      };
+      onAddStrategy?.(newStrat);
+    }
     setIsAddingStrategy(false);
-    setNewStrategyName('');
-    setNewStrategyConditions('');
-    setNewStrategyRisk('');
-    setNewStrategyModelImage(null);
+    setEditingStrategy(null);
+    resetStrategyForm();
   };
 
   const activeAccount = useMemo(() => {
@@ -664,12 +719,15 @@ const TradingJournal: React.FC<TradingJournalProps> = ({
               )}
 
               <section className="glass p-10 rounded-[40px] border-white/5 bg-white/[0.01] space-y-8">
-                <div className="flex justify-between items-center"><h3 className="text-sm font-black text-slate-500 uppercase tracking-widest">Protocol Conditions</h3><button className="text-[10px] font-black text-emerald-400 uppercase tracking-widest hover:underline">Update Criteria</button></div>
+                <div className="flex justify-between items-center">
+                  <h3 className="text-sm font-black text-slate-500 uppercase tracking-widest">Protocol Conditions</h3>
+                  <button onClick={() => handleOpenEditStrategy(selectedStrat)} className="text-[10px] font-black text-emerald-400 uppercase tracking-widest hover:underline">Update Criteria</button>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <ConditionRow label="Market Condition" value={selectedStrat.marketCondition || "Trending / High Volatility"} />
-                  <ConditionRow label="Preferred Timeframe" value={selectedStrat.timeframe || "1m / 5m Context"} />
-                  <ConditionRow label="Entry Criteria" value={selectedStrat.entryCriteria || "FVG + Liquidity Sweep"} />
-                  <ConditionRow label="Risk Model" value={selectedStrat.riskModel || "0.5% Fixed"} />
+                  <ConditionRow label="Market Condition" value={selectedStrat.marketCondition || "Not defined"} />
+                  <ConditionRow label="Preferred Timeframe" value={selectedStrat.timeframe || "Not defined"} />
+                  <ConditionRow label="Entry Criteria" value={selectedStrat.entryCriteria || "Not defined"} />
+                  <ConditionRow label="Risk Model" value={selectedStrat.riskModel || "Not defined"} />
                 </div>
                 <div className="pt-6 border-t border-white/5"><p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-3">Notes</p><p className="text-sm text-slate-300 leading-relaxed italic">{selectedStrat.notes || "No detailed implementation notes archived."}</p></div>
               </section>
@@ -722,7 +780,7 @@ const TradingJournal: React.FC<TradingJournalProps> = ({
             <div className="space-y-12 animate-fade-in-up">
               <div className="flex justify-between items-center px-1">
                 <h2 className="text-xl font-black text-white">Strategy Playbook</h2>
-                <button onClick={() => setIsAddingStrategy(true)} className="px-6 py-3 bg-emerald-400 text-black font-black uppercase tracking-[0.2em] text-[10px] rounded-xl shadow-lg shadow-emerald-400/20 active:scale-95 transition-all">New Protocol</button>
+                <button onClick={handleOpenNewStrategy} className="px-6 py-3 bg-emerald-400 text-black font-black uppercase tracking-[0.2em] text-[10px] rounded-xl shadow-lg shadow-emerald-400/20 active:scale-95 transition-all">New Protocol</button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {strategyEvaluations.map(strat => (
@@ -897,15 +955,20 @@ const TradingJournal: React.FC<TradingJournalProps> = ({
 
       {isAddingStrategy && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setIsAddingStrategy(false)}>
-          <div className="w-full max-w-lg bg-[#111a14] border border-white/10 rounded-[40px] shadow-2xl p-10 animate-fade-in-up" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-2xl font-black font-display tracking-tight text-white mb-8">New Trading Protocol</h2>
+          <div className="w-full max-w-2xl bg-[#111a14] border border-white/10 rounded-[40px] shadow-2xl p-10 animate-fade-in-up" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-2xl font-black font-display tracking-tight text-white mb-8">{editingStrategy ? 'Update Protocol' : 'New Trading Protocol'}</h2>
             <div className="space-y-6">
-              <input type="text" placeholder="Protocol Name" value={newStrategyName} onChange={(e) => setNewStrategyName(e.target.value)} className="w-full glass border-none rounded-2xl p-4 text-sm font-bold focus:ring-1 focus:ring-emerald-400 outline-none text-slate-200 bg-[#0d120f]" />
-              <textarea placeholder="Conditions & Notes" value={newStrategyConditions} onChange={(e) => setNewStrategyConditions(e.target.value)} className="w-full h-24 glass border-none rounded-2xl p-4 text-sm font-medium focus:ring-1 focus:ring-emerald-400 outline-none text-slate-200 resize-none bg-[#0d120f]" />
-              <input type="text" placeholder="Risk Model (e.g., 0.5% Fixed)" value={newStrategyRisk} onChange={(e) => setNewStrategyRisk(e.target.value)} className="w-full glass border-none rounded-2xl p-4 text-sm font-bold focus:ring-1 focus:ring-emerald-400 outline-none text-slate-200 bg-[#0d120f]" />
+              <input type="text" placeholder="Protocol Name" value={newStrategyTitle} onChange={(e) => setNewStrategyTitle(e.target.value)} className="w-full glass border-none rounded-2xl p-4 text-sm font-bold focus:ring-1 focus:ring-emerald-400 outline-none text-slate-200 bg-[#0d120f]" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <input type="text" placeholder="Market Condition (e.g., Trending)" value={newStrategyMarketCondition} onChange={(e) => setNewStrategyMarketCondition(e.target.value)} className="w-full glass border-none rounded-2xl p-4 text-sm font-bold focus:ring-1 focus:ring-emerald-400 outline-none text-slate-200 bg-[#0d120f]" />
+                <input type="text" placeholder="Preferred Timeframe (e.g., 1m/5m)" value={newStrategyTimeframe} onChange={(e) => setNewStrategyTimeframe(e.target.value)} className="w-full glass border-none rounded-2xl p-4 text-sm font-bold focus:ring-1 focus:ring-emerald-400 outline-none text-slate-200 bg-[#0d120f]" />
+              </div>
+              <textarea placeholder="Entry Criteria (e.g., FVG + Liquidity Sweep)" value={newStrategyEntryCriteria} onChange={(e) => setNewStrategyEntryCriteria(e.target.value)} className="w-full h-24 glass border-none rounded-2xl p-4 text-sm font-medium focus:ring-1 focus:ring-emerald-400 outline-none text-slate-200 resize-none bg-[#0d120f]" />
+              <input type="text" placeholder="Risk Model (e.g., 0.5% Fixed)" value={newStrategyRiskModel} onChange={(e) => setNewStrategyRiskModel(e.target.value)} className="w-full glass border-none rounded-2xl p-4 text-sm font-bold focus:ring-1 focus:ring-emerald-400 outline-none text-slate-200 bg-[#0d120f]" />
+              <textarea placeholder="General Notes" value={newStrategyNotes} onChange={(e) => setNewStrategyNotes(e.target.value)} className="w-full h-24 glass border-none rounded-2xl p-4 text-sm font-medium focus:ring-1 focus:ring-emerald-400 outline-none text-slate-200 resize-none bg-[#0d120f]" />
               <button onClick={() => strategyModelInputRef.current?.click()} className="w-full py-4 bg-white/5 text-white font-black uppercase tracking-widest rounded-2xl hover:bg-white/10 transition-all border border-white/5">{newStrategyModelImage ? 'Blueprint Attached' : 'Attach Blueprint Image'}</button>
               <input type="file" accept="image/*" ref={strategyModelInputRef} onChange={handleStrategyModelUpload} className="hidden" />
-              <button onClick={handleAddStrategySubmit} className="w-full py-5 bg-emerald-400 text-black font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-emerald-400/20 active:scale-95 transition-all">Archive Protocol</button>
+              <button onClick={handleAddStrategySubmit} className="w-full py-5 bg-emerald-400 text-black font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-emerald-400/20 active:scale-95 transition-all">{editingStrategy ? 'Update Protocol' : 'Archive Protocol'}</button>
             </div>
           </div>
         </div>

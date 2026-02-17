@@ -245,6 +245,10 @@ const App: React.FC = () => {
     });
   }, []);
 
+  const handleUpdateStrategy = useCallback((id: string, updates: Partial<Strategy>) => {
+    setStrategies(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
+  }, []);
+
   const handleSelectAccount = useCallback((id: string) => {
     setAccounts(prev => prev.map(acc => ({
       ...acc,
@@ -381,6 +385,7 @@ const App: React.FC = () => {
             onDeleteTrade={handleDeleteTrade}
             onAddStrategy={(s) => setStrategies(prev => [s, ...prev])}
             onDeleteStrategy={(id) => setStrategies(prev => prev.filter(s => s.id !== id))}
+            onUpdateStrategy={handleUpdateStrategy}
             onAddAccount={(a) => setAccounts(p => [...p, a])}
             onDeleteAccount={handleDeleteAccount}
             onSelectAccount={handleSelectAccount}

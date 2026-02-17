@@ -139,13 +139,10 @@ export interface Strategy {
   tag: string;
   image: string; // Thumbnail
   modelImage?: string; // High-res blueprint image
-  notes: string;
-  // New condition fields
+  notes?: string;
   marketCondition?: string;
   timeframe?: string;
   entryCriteria?: string;
-  confirmationSignals?: string;
-  invalidationRules?: string;
   riskModel?: string;
 }
 
