@@ -162,14 +162,14 @@ export interface PracticeEntry {
   id: string;
   date: string;
   notes: string;
-  timeSpent: string;
+  timeSpent: number;
   achievements: string;
 }
 
 export interface Skill {
   id: string;
   skillName: string;
-  level: string; // Current level or mastery %
+  targetTime: number; // Target time in minutes
   startDate: string;
   goal?: string;
   streak?: number;

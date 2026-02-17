@@ -27,7 +27,7 @@ const MasteryStack: React.FC<MasteryStackProps> = ({ skills, onAddSkill, onUpdat
   const [newSkillIcon, setNewSkillIcon] = useState(PREDEFINED_ICONS[0]);
   const [newSkillColor, setNewSkillColor] = useState(COLOR_PALETTE[0].key);
   const [newSkillGoal, setNewSkillGoal] = useState('');
-  const [newSkillLevel, setNewSkillLevel] = useState('0%');
+  const [newSkillTargetTime, setNewSkillTargetTime] = useState('');
 
   // New Log Form State
   const [logSkillId, setLogSkillId] = useState('');
@@ -35,15 +35,14 @@ const MasteryStack: React.FC<MasteryStackProps> = ({ skills, onAddSkill, onUpdat
   const [logTimeSpent, setLogTimeSpent] = useState('');
   const [logAchievements, setLogAchievements] = useState('');
 
-  // Helper to parse percentage from level string (e.g., "85%" -> 85)
-  const getProgressVal = (level: string) => {
-    const match = level.match(/(\d+)/);
-    return match ? Math.min(100, parseInt(match[1])) : 0;
+  const calculateProgress = (skill: Skill) => {
+    const totalTime = skill.practiceLog.reduce((sum, log) => sum + (log.timeSpent || 0), 0);
+    return skill.targetTime > 0 ? (totalTime / skill.targetTime) * 100 : 0;
   };
 
   // Categorize skills based on efficiency
-  const activeSkills = useMemo(() => skills.filter(s => getProgressVal(s.level) < 100), [skills]);
-  const masteredSkills = useMemo(() => skills.filter(s => getProgressVal(s.level) >= 100), [skills]);
+  const activeSkills = useMemo(() => skills.filter(s => calculateProgress(s) < 100), [skills]);
+  const masteredSkills = useMemo(() => skills.filter(s => calculateProgress(s) >= 100), [skills]);
 
   // Overall Skills Mastered summary header logic
   const masteredCount = masteredSkills.length;
@@ -54,7 +53,7 @@ const MasteryStack: React.FC<MasteryStackProps> = ({ skills, onAddSkill, onUpdat
       id: Date.now().toString(),
       skillName: newSkillName,
       icon: newSkillIcon,
-      level: newSkillLevel,
+      targetTime: parseInt(newSkillTargetTime) || 0,
       color: newSkillColor,
       startDate: new Date().toISOString().split('T')[0],
       goal: newSkillGoal,
@@ -63,7 +62,7 @@ const MasteryStack: React.FC<MasteryStackProps> = ({ skills, onAddSkill, onUpdat
     });
     setNewSkillName('');
     setNewSkillGoal('');
-    setNewSkillLevel('0%');
+    setNewSkillTargetTime('');
     setIsAddingSkill(false);
   };
   
@@ -80,7 +79,7 @@ const MasteryStack: React.FC<MasteryStackProps> = ({ skills, onAddSkill, onUpdat
       id: Date.now().toString(),
       date: new Date().toISOString().split('T')[0],
       notes: logNotes,
-      timeSpent: logTimeSpent,
+      timeSpent: parseInt(logTimeSpent) || 0,
       achievements: logAchievements
     });
     setLogNotes('');
@@ -91,13 +90,15 @@ const MasteryStack: React.FC<MasteryStackProps> = ({ skills, onAddSkill, onUpdat
 
   // Aggregated logs for the Growth Log section
   const allLogs = skills
-    .flatMap(s => s.practiceLog.map(l => ({ ...l, skillName: s.skillName, color: s.color })))
+    .flatMap(s => (s.practiceLog || []).map(l => ({ ...l, skillName: s.skillName, color: s.color })))
     .sort((a, b) => b.date.localeCompare(a.date));
 
   const renderSkillCard = (skill: Skill, index: number) => {
-    const progress = getProgressVal(skill.level);
+    const totalTimePracticed = skill.practiceLog.reduce((sum, entry) => sum + (entry.timeSpent || 0), 0);
+    const progress = skill.targetTime > 0 ? Math.min(100, (totalTimePracticed / skill.targetTime) * 100) : 0;
+    const remainingTime = Math.max(0, skill.targetTime - totalTimePracticed);
+
     const colorObj = COLOR_PALETTE.find(c => c.key === skill.color) || COLOR_PALETTE[0];
-    const isMastered = progress >= 100;
 
     return (
       <div 
@@ -126,8 +127,8 @@ const MasteryStack: React.FC<MasteryStackProps> = ({ skills, onAddSkill, onUpdat
             </div>
           </div>
           <div className="text-right">
-            <div className={`text-3xl font-black tracking-tighter ${colorObj.text}`}>{skill.level}</div>
-            <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mt-1">Mastery Depth</p>
+            <div className={`text-3xl font-black tracking-tighter ${colorObj.text}`}>{remainingTime}m</div>
+            <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mt-1">Time to Mastery</p>
           </div>
         </div>
 
@@ -135,7 +136,7 @@ const MasteryStack: React.FC<MasteryStackProps> = ({ skills, onAddSkill, onUpdat
         <div className="space-y-4 relative z-10">
            <div className="flex justify-between items-end">
               <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Efficiency Path</p>
-              <p className="text-[10px] font-black text-white bg-white/5 px-2 py-0.5 rounded-md border border-white/5">{progress}% Progress</p>
+              <p className="text-[10px] font-black text-white bg-white/5 px-2 py-0.5 rounded-md border border-white/5">{progress.toFixed(0)}% In Progress</p>
            </div>
            <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden p-[2px]">
               <div 
@@ -152,19 +153,6 @@ const MasteryStack: React.FC<MasteryStackProps> = ({ skills, onAddSkill, onUpdat
 
         <div className="flex justify-between items-center pt-2 relative z-10">
            <div className="flex gap-4">
-              <button 
-                onClick={() => {
-                  const newVal = prompt("Update Mastery Efficiency (e.g. 85% or numeric XP):", skill.level);
-                  if (newVal !== null) {
-                    // Logic to handle numeric XP calculation if required, but keeping string support
-                    onUpdateSkill(skill.id, { level: newVal.includes('%') ? newVal : `${newVal}%` });
-                  }
-                }}
-                className="text-[10px] font-black text-slate-500 uppercase hover:text-white transition-colors tracking-[0.15em] flex items-center gap-2"
-              >
-                <span className="material-symbols-outlined text-sm">trending_up</span>
-                Update XP
-              </button>
               <button 
                 onClick={() => {
                   const newGoal = prompt("Adjust Strategy Goal:", skill.goal || "");
@@ -256,12 +244,12 @@ const MasteryStack: React.FC<MasteryStackProps> = ({ skills, onAddSkill, onUpdat
               <div className="space-y-8">
                 <div className="grid grid-cols-2 gap-6">
                    <div className="space-y-3">
-                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-2">Baseline (%)</label>
+                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-2">Target Time (minutes)</label>
                      <input 
-                        type="text" 
-                        placeholder="e.g. 10%" 
-                        value={newSkillLevel}
-                        onChange={(e) => setNewSkillLevel(e.target.value)}
+                        type="number" 
+                        placeholder="e.g. 1200" 
+                        value={newSkillTargetTime}
+                        onChange={(e) => setNewSkillTargetTime(e.target.value)}
                         className="w-full glass border-none rounded-[24px] p-6 text-sm font-bold focus:ring-1 focus:ring-emerald-400 outline-none text-white bg-[#0d120f]/50" 
                      />
                    </div>
@@ -352,8 +340,8 @@ const MasteryStack: React.FC<MasteryStackProps> = ({ skills, onAddSkill, onUpdat
                 </div>
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-2">Duration</label>
-                    <input type="text" placeholder="e.g. 45m" value={logTimeSpent} onChange={(e) => setLogTimeSpent(e.target.value)} className="w-full glass border-none rounded-2xl p-5 text-sm font-bold focus:ring-1 focus:ring-blue-400 outline-none text-white bg-[#0d120f]" />
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-2">Duration (minutes)</label>
+                    <input type="number" placeholder="e.g. 45" value={logTimeSpent} onChange={(e) => setLogTimeSpent(e.target.value)} className="w-full glass border-none rounded-2xl p-5 text-sm font-bold focus:ring-1 focus:ring-blue-400 outline-none text-white bg-[#0d120f]" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-2">Key Win</label>
@@ -394,7 +382,7 @@ const MasteryStack: React.FC<MasteryStackProps> = ({ skills, onAddSkill, onUpdat
                       <span className="text-[10px] text-slate-700 font-bold uppercase tracking-widest">{entry.date}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                       <span className="text-[10px] font-black text-slate-500 uppercase bg-white/5 px-4 py-1.5 rounded-xl border border-white/5 tracking-widest">{entry.timeSpent}</span>
+                       <span className="text-[10px] font-black text-slate-500 uppercase bg-white/5 px-4 py-1.5 rounded-xl border border-white/5 tracking-widest">{entry.timeSpent}m</span>
                        <div className="size-2 rounded-full bg-blue-500/20"></div>
                     </div>
                   </div>

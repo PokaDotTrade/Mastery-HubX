@@ -56,8 +56,13 @@ export const STRATEGIES: Strategy[] = [
 ];
 
 export const INITIAL_SKILLS: Skill[] = [
-  { id: 'sk1', skillName: 'Technical Analysis', level: '85%', startDate: '2023-01-01', goal: 'Institutional Level Flow', streak: 15, icon: 'monitoring', color: 'primary', practiceLog: [] },
-  { id: 'sk2', skillName: 'React Engineering', level: '92%', startDate: '2022-06-01', goal: 'Senior Mastery', streak: 42, icon: 'terminal', color: 'emerald', practiceLog: [] }
+  { id: 'sk1', skillName: 'Technical Analysis', targetTime: 1200, startDate: '2023-01-01', goal: 'Institutional Level Flow', streak: 15, icon: 'monitoring', color: 'primary', practiceLog: [
+    { id: 'pl1', date: '2024-07-20', notes: 'Reviewed support and resistance.', timeSpent: 45, achievements: 'Identified key levels' },
+    { id: 'pl2', date: '2024-07-21', notes: 'Backtested Silver Bullet strategy.', timeSpent: 60, achievements: 'Found 3 high-probability setups' }
+  ] },
+  { id: 'sk2', skillName: 'React Engineering', targetTime: 600, startDate: '2022-06-01', goal: 'Senior Mastery', streak: 42, icon: 'terminal', color: 'emerald', practiceLog: [
+     { id: 'pl3', date: '2024-07-22', notes: 'Refactored state management.', timeSpent: 90, achievements: 'Reduced component complexity' }
+  ] }
 ];
 
 export const INITIAL_PROJECTS: PipelineProject[] = [

@@ -12,11 +12,10 @@ interface LayoutProps {
   focusXP: number;
   xpToNext: number;
   onLogout: () => void;
-  onOpenSettings: () => void;
 }
 
 const Layout: React.FC<LayoutProps> = ({ 
-  children, activeTab, setActiveTab, title, description, focusLevel, focusXP, xpToNext, onLogout, onOpenSettings
+  children, activeTab, setActiveTab, title, description, focusLevel, focusXP, xpToNext, onLogout
 }) => {
   const progressPercentage = (focusXP / xpToNext) * 100;
 
@@ -83,16 +82,6 @@ const Layout: React.FC<LayoutProps> = ({
                   <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">{focusXP} / {xpToNext}</p>
                 </div>
               </div>
-
-              <button 
-                onClick={onOpenSettings}
-                className="w-full flex items-center gap-4 p-4 rounded-[20px] transition-all hover:bg-white/5 group text-slate-500 hover:text-white"
-              >
-                <div className="p-2 rounded-xl bg-white/5 transition-all group-hover:bg-white/10">
-                  <span className="material-symbols-outlined text-2xl">settings</span>
-                </div>
-                <span className="text-[11px] font-black uppercase tracking-widest">Settings</span>
-              </button>
               
               <button 
                 onClick={onLogout}

@@ -524,7 +524,7 @@ const TradingJournal: React.FC<TradingJournalProps> = ({
                 <div className="bg-[#111a14] p-8 rounded-[40px] border border-white/5 relative h-44 flex flex-col justify-center transition-all hover:scale-[1.02] shadow-xl group">
                   <div className="absolute top-8 right-8 text-slate-800 group-hover:text-emerald-400/20 transition-colors"><span className="material-symbols-outlined text-3xl">monitoring</span></div>
                   <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">PORTFOLIO DELTA</p>
-                  <h3 className={`text-4xl font-black tracking-tighter ${stats.totalPnL >= 0 ? 'text-[#30e86e]' : 'text-rose-500'}`}>{stats.totalPnL >= 0 ? '+' : ''}{activeAccount?.currency || '$'}{Math.abs(stats.totalPnL).toLocaleString()}</h3>
+                  <h3 className={`text-4xl font-black tracking-tighter ${stats.totalPnL >= 0 ? 'text-[#30e86e]' : 'text-rose-500'}`}>{stats.totalPnL >= 0 ? '+' : ''}{activeAccount?.currency || '$'}${Math.abs(stats.totalPnL).toLocaleString()}</h3>
                   <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mt-3">PERIOD P&L DISTRIBUTION</p>
                 </div>
               )}
@@ -535,19 +535,17 @@ const TradingJournal: React.FC<TradingJournalProps> = ({
                 <div className="flex items-center gap-2"><div className="size-2 rounded-full bg-[#30e86e]"></div><span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">ACTUAL</span></div>
                 <div className="flex items-center gap-2"><div className="size-2 rounded-full bg-[#3b82f6]"></div><span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">COMPOUNDING TARGET ({dailyTargetRate}%)</span></div>
               </div>
-              <div className="h-[450px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={stats.chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                    <defs><linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#30e86e" stopOpacity={0.2}/><stop offset="95%" stopColor="#30e86e" stopOpacity={0}/></linearGradient></defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#333', fontSize: 10, fontWeight: 900 }} dy={10} />
-                    <YAxis domain={['auto', 'auto']} axisLine={false} tickLine={false} tick={{ fill: '#333', fontSize: 10, fontWeight: 900 }} tickFormatter={(val) => `${activeAccount?.currency || '$'}${val.toLocaleString()}`} />
-                    <Tooltip contentStyle={{ backgroundColor: '#111a14', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }} itemStyle={{ fontSize: '10px', fontWeight: 'black', textTransform: 'uppercase' }} />
-                    <Area type="monotone" dataKey="actual" stroke="#30e86e" strokeWidth={4} fillOpacity={1} fill="url(#colorActual)" connectNulls />
-                    <Line type="monotone" dataKey="projected" stroke="#3b82f6" strokeWidth={2} strokeDasharray="5 5" dot={false} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
+              <ResponsiveContainer width="100%" height={450}>
+                <AreaChart data={stats.chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                  <defs><linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#30e86e" stopOpacity={0.2}/><stop offset="95%" stopColor="#30e86e" stopOpacity={0}/></linearGradient></defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#333', fontSize: 10, fontWeight: 900 }} dy={10} />
+                  <YAxis domain={['auto', 'auto']} axisLine={false} tickLine={false} tick={{ fill: '#333', fontSize: 10, fontWeight: 900 }} tickFormatter={(val) => `${activeAccount?.currency || '$'}${val.toLocaleString()}`} />
+                  <Tooltip contentStyle={{ backgroundColor: '#111a14', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }} itemStyle={{ fontSize: '10px', fontWeight: 'black', textTransform: 'uppercase' }} />
+                  <Area type="monotone" dataKey="actual" stroke="#30e86e" strokeWidth={4} fillOpacity={1} fill="url(#colorActual)" connectNulls />
+                  <Line type="monotone" dataKey="projected" stroke="#3b82f6" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
 
             <section className="space-y-4 no-print animate-fade-in-up">
@@ -744,7 +742,7 @@ const TradingJournal: React.FC<TradingJournalProps> = ({
                         <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Win Rate</p>
                       </div>
                       <div>
-                        <p className={`text-lg font-black ${strat.totalProfit >= 0 ? 'text-emerald-400' : 'text-rose-500'}`}>{strat.totalProfit >= 0 ? '+' : ''}{activeAccount?.currency || '$'}{Math.abs(strat.totalProfit).toLocaleString()}</p>
+                        <p className={`text-lg font-black ${strat.totalProfit >= 0 ? 'text-emerald-400' : 'text-rose-500'}`}>{strat.totalProfit >= 0 ? '+' : ''}{activeAccount?.currency || '$'}${Math.abs(strat.totalProfit).toLocaleString()}</p>
                         <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Net PnL</p>
                       </div>
                       <div>

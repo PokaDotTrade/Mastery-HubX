@@ -1,14 +1,27 @@
-
 {
   "name": "daily-wins-mastery",
   "version": "1.0.0",
+  "private": true,
   "description": "ADHD-friendly mastery dashboard with trading journal and future letters.",
   "main": "index.tsx",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
   "dependencies": {
+    "@google/genai": "^1.40.0",
+    "jspdf": "^2.5.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "recharts": "^3.7.0",
-    "@google/genai": "^1.40.0"
+    "recharts": "^3.7.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "typescript": "^5.5.3",
+    "vite": "^5.3.3"
   },
   "keywords": [
     "ADHD",

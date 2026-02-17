@@ -76,7 +76,6 @@ const App: React.FC = () => {
   const [projects, setProjects] = useState<PipelineProject[]>(() => getInitialState<PipelineProject[]>('projects', INITIAL_PROJECTS));
   const [heartedScriptures, setHeartedScriptures] = useState<Devotion[]>(() => getInitialState<Devotion[]>('heartedScriptures', []));
   const [budgetMantra, setBudgetMantra] = useState<string>(() => getInitialState<string>('budgetMantra', 'This budget builds my financial freedom.'));
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
 
   const [coachMessage, setCoachMessage] = useState("Focus on one small win at a time.");
@@ -336,17 +335,19 @@ const App: React.FC = () => {
             onAddSkill={(s) => setSkills(p => [...p, s])}
             onUpdateSkill={(id, u) => setSkills(p => p.map(s => s.id === id ? { ...s, ...u } : s))}
             onDeleteSkill={(id) => setSkills(p => p.filter(s => s.id !== id))}
-            onAddPracticeEntry={(skillId, e) => {
-              setSkills(p => p.map(s => {
-                if (s.id === skillId) {
-                  return {
-                    ...s,
-                    streak: (s.streak || 0) + 1,
-                    practiceLog: [...s.practiceLog, e]
-                  };
-                }
-                return s;
-              }));
+            onAddPracticeEntry={(skillId, entry) => {
+              setSkills(prevSkills => 
+                prevSkills.map(skill => {
+                  if (skill.id === skillId) {
+                    return {
+                      ...skill,
+                      streak: (skill.streak || 0) + 1,
+                      practiceLog: [entry, ...(skill.practiceLog || [])],
+                    };
+                  }
+                  return skill;
+                })
+              );
             }}
           />
         );
@@ -527,51 +528,9 @@ const App: React.FC = () => {
         focusXP={focusStats.xp}
         xpToNext={focusStats.xpToNext}
         onLogout={handleTerminateSession}
-        onOpenSettings={() => setIsSettingsOpen(true)}
       >
         {renderContent()}
       </Layout>
-
-      {isSettingsOpen && (
-        <div className="fixed inset-0 z-[300] flex items-center justify-center p-6 bg-black/90 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setIsSettingsOpen(false)}>
-          <div className="w-full max-w-md bg-[#111a14] border border-white/10 rounded-[40px] shadow-2xl p-8" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-8">
-              <div>
-                <h2 className="text-2xl font-black font-display tracking-tight text-white">Settings</h2>
-                <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mt-1">System Preferences</p>
-              </div>
-              <button onClick={() => setIsSettingsOpen(false)} className="size-10 glass rounded-full flex items-center justify-center text-slate-400 hover:text-white transition-colors">
-                <span className="material-symbols-outlined">close</span>
-              </button>
-            </div>
-
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">Display Currency</label>
-                <select 
-                  value={CURRENCY_OPTIONS.find(c => c.symbol === currency)?.code || 'USD'} 
-                  onChange={(e) => {
-                    const selected = CURRENCY_OPTIONS.find(c => c.code === e.target.value);
-                    if (selected) {
-                      setCurrency(selected.symbol);
-                    }
-                  }}
-                  className="w-full glass border-none rounded-2xl p-4 text-sm font-bold text-slate-200 bg-[#0d120f] outline-none"
-                >
-                  {CURRENCY_OPTIONS.map(c => (
-                    <option key={c.code} value={c.code} className="bg-[#111a14] text-white">
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <button onClick={() => setIsSettingsOpen(false)} className="w-full py-4 bg-white/5 text-white font-black uppercase tracking-widest rounded-2xl hover:bg-white/10 transition-all border border-white/5">
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 };
