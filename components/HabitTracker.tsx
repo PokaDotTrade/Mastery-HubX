@@ -19,34 +19,81 @@ const HabitTracker: React.FC<HabitTrackerProps> = ({ habits, onAddHabit, onToggl
   const [isAdding, setIsAdding] = useState(false);
   const [newLabel, setNewLabel] = useState('');
   const [selectedIcon, setSelectedIcon] = useState(PREDEFINED_ICONS[0]);
-  
-  const todayIndex = new Date().getDay();
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+
+  const currentDayProgress = useMemo(() => {
+    if (habits.length === 0) return 0;
+    const completedCount = habits.filter(h => h.completed).length;
+    return (completedCount / habits.length) * 100;
+  }, [habits]);
 
   const weekData = useMemo(() => {
-    const currentDayProgress = habits.length > 0 
-      ? (habits.filter(h => h.completed).length / habits.length) * 100 
-      : 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dayOfWeek = today.getDay();
 
     return DAYS_SHORT.map((day, idx) => {
-      const isToday = idx === todayIndex;
-      const simulatedProgress = idx < todayIndex ? (idx === todayIndex - 1 ? 45 : 25) : 0;
+      const date = new Date(today);
+      date.setDate(today.getDate() - (dayOfWeek - idx));
+      const dateStr = date.toISOString().split('T')[0];
+
+      let completedCount = 0;
+      let totalCount = habits.length;
+
+      if (date <= today) {
+        if (date.getTime() === today.getTime()) {
+          completedCount = habits.filter(h => h.completed).length;
+        } else {
+          completedCount = habits.filter(h => (h.completionHistory || []).includes(dateStr)).length;
+        }
+      } else {
+        totalCount = 0;
+      }
+      
+      const progress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
       
       return {
         day,
-        date: new Date(new Date().setDate(new Date().getDate() - (todayIndex - idx)))
-          .toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }).replace('/', '.'),
-        progress: isToday ? currentDayProgress : simulatedProgress,
-        completed: isToday ? habits.filter(h => h.completed).length : Math.floor((simulatedProgress / 100) * 5),
-        total: isToday ? habits.length : 5,
-        isToday
+        date: date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }).replace('/', '.'),
+        progress,
+        completed: completedCount,
+        total: totalCount,
+        isToday: idx === dayOfWeek
       };
     });
-  }, [habits, todayIndex]);
+  }, [habits]);
 
   const weeklyAverage = useMemo(() => {
-    const sum = weekData.reduce((acc, d) => acc + d.progress, 0);
-    return Math.round(sum / 7);
+    const todayIndex = new Date().getDay();
+    const relevantDays = weekData.slice(0, todayIndex + 1);
+    if (relevantDays.length === 0) return 0;
+    const relevantSum = relevantDays.reduce((acc, d) => acc + d.progress, 0);
+    return Math.round(relevantSum / relevantDays.length);
   }, [weekData]);
+  
+  const bestHabitOfTheWeek = useMemo(() => {
+    if (habits.length === 0) return null;
+
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+    const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
+
+    let bestHabit: Win | null = null;
+    let maxCount = 0;
+
+    for (const habit of habits) {
+      const recentCompletions = (habit.completionHistory || [])
+        .filter(dateStr => dateStr >= sevenDaysAgoStr);
+      
+      if (recentCompletions.length > maxCount) {
+        maxCount = recentCompletions.length;
+        bestHabit = habit;
+      }
+    }
+    
+    return maxCount > 0 ? { ...bestHabit, count: maxCount } : null;
+  }, [habits]);
 
   const handleAdd = () => {
     if (!newLabel.trim()) return;
@@ -72,7 +119,7 @@ const HabitTracker: React.FC<HabitTrackerProps> = ({ habits, onAddHabit, onToggl
                   <div className="w-full bg-white/5 rounded-md relative h-full overflow-hidden">
                     <div 
                       className={`absolute bottom-0 w-full transition-all duration-1000 ease-out rounded-t-sm ${data.isToday ? 'bg-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.4)]' : 'bg-slate-700/40'}`}
-                      style={{ height: `${Math.max(6, data.progress)}%` }}
+                      style={{ height: `${Math.max(data.progress > 0 ? 6 : 0, data.progress)}%` }}
                     ></div>
                   </div>
                 </div>
@@ -80,15 +127,18 @@ const HabitTracker: React.FC<HabitTrackerProps> = ({ habits, onAddHabit, onToggl
             </div>
           </div>
 
-          <div className="shrink-0 flex flex-col items-center gap-6">
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Weekly Average</p>
+          <button 
+            onClick={() => setIsStatusModalOpen(true)}
+            className="shrink-0 flex flex-col items-center gap-6 group cursor-pointer"
+          >
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] group-hover:text-orange-400 transition-colors">Weekly Average</p>
             <div className="relative size-36 flex items-center justify-center">
               <svg className="size-full -rotate-90" viewBox="0 0 144 144">
                 <circle cx="72" cy="72" r="60" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-white/5" />
                 <circle 
                   cx="72" cy="72" r="60" stroke="currentColor" strokeWidth="8" fill="transparent" 
                   strokeDasharray={377} strokeDashoffset={377 - (377 * weeklyAverage) / 100}
-                  className="text-slate-700"
+                  className="text-slate-700 group-hover:text-orange-400 transition-colors duration-500"
                   strokeLinecap="round"
                 />
               </svg>
@@ -98,9 +148,9 @@ const HabitTracker: React.FC<HabitTrackerProps> = ({ habits, onAddHabit, onToggl
                  </div>
               </div>
             </div>
-          </div>
+          </button>
 
-          <div className="hidden lg:flex items-center gap-4 bg-white/5 p-4 pr-6 rounded-3xl border border-white/5">
+          <button onClick={() => setIsStatusModalOpen(true)} className="hidden lg:flex items-center gap-4 bg-white/5 p-4 pr-6 rounded-3xl border border-white/5 hover:bg-white/10 transition-colors">
              <div className="size-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500">
                 <span className="material-symbols-outlined filled-icon">local_fire_department</span>
              </div>
@@ -108,7 +158,7 @@ const HabitTracker: React.FC<HabitTrackerProps> = ({ habits, onAddHabit, onToggl
                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Active Status</p>
                 <p className="text-sm font-black text-white">Daily</p>
              </div>
-          </div>
+          </button>
         </div>
       </section>
 
@@ -245,6 +295,32 @@ const HabitTracker: React.FC<HabitTrackerProps> = ({ habits, onAddHabit, onToggl
           ))}
         </div>
       </section>
+
+      {isStatusModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setIsStatusModalOpen(false)}>
+          <div className="w-full max-w-md bg-[#111a14] border border-orange-500/20 rounded-[40px] shadow-2xl p-10 animate-fade-in-up" onClick={(e) => e.stopPropagation()}>
+            <div className="text-center space-y-8">
+              <div>
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-2">📊 Today’s Progress</p>
+                <h2 className="text-6xl font-black font-display tracking-tighter text-orange-400">{Math.round(currentDayProgress)}%</h2>
+              </div>
+              <div className="h-px bg-white/10 w-2/3 mx-auto"></div>
+              <div>
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-2">🏆 Best Habit This Week</p>
+                {bestHabitOfTheWeek ? (
+                  <div className="flex items-center justify-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5">
+                    <span className="material-symbols-outlined text-emerald-400 text-2xl">{bestHabitOfTheWeek.icon}</span>
+                    <h3 className="text-xl font-black text-white">{bestHabitOfTheWeek.label}</h3>
+                    <span className="text-xs font-bold text-slate-500">({bestHabitOfTheWeek.count} times)</span>
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-600 italic">No habits executed this week.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

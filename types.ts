@@ -9,6 +9,7 @@ export interface Win {
   color: string;
   streak: number;
   customIcon?: string;
+  completionHistory?: string[]; // Array of 'YYYY-MM-DD' dates
 }
 
 export interface Devotion {
@@ -177,7 +178,7 @@ export interface Skill {
 }
 
 export interface PipelineProject {
-  id: string;
+  id:string;
   title: string;
   description: string;
   status: 'idea' | 'active' | 'done';

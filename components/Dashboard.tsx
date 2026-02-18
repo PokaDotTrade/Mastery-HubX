@@ -276,10 +276,15 @@ const Dashboard: React.FC<DashboardProps> = ({
                         <h3 className="text-2xl font-black mt-3 text-white tracking-tight font-display group-hover:text-emerald-400 transition-colors">{acc.name}</h3>
                      </div>
                      <div className="text-right">
-                        <p className={`text-3xl font-black tracking-tighter ${isPositive ? 'text-emerald-400' : 'text-rose-500'}`}>
-                           {isPositive ? '+' : ''}{acc.currency}{Math.abs(acc.netProfit).toLocaleString()}
-                        </p>
-                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1">Global P/L Delta</p>
+                        <div className="flex items-center justify-end gap-2">
+                          <span className={`material-symbols-outlined text-3xl ${isPositive ? 'text-emerald-400' : 'text-rose-500'}`}>
+                              {isPositive ? 'trending_up' : 'trending_down'}
+                          </span>
+                          <p className={`text-3xl font-black tracking-tighter ${isPositive ? 'text-emerald-400' : 'text-rose-500'}`}>
+                              {acc.currency}{Math.abs(acc.netProfit).toLocaleString()}
+                          </p>
+                        </div>
+                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1">Global P&L Data</p>
                      </div>
                   </div>
                   <div className="grid grid-cols-3 gap-6 mb-10 relative">

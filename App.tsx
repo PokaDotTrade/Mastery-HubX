@@ -17,6 +17,8 @@ import { getADHDCoachMessage } from './services/geminiService.ts';
 
 const STORAGE_KEY = 'mastery_hub_v1_state';
 const IDENTITY_KEY = 'mastery_hub_identity_pref_v1';
+const LAST_VISIT_KEY = 'mastery_hub_last_visit_v1';
+const SIDEBAR_COLLAPSED_KEY = 'mastery_hub_sidebar_collapsed_v1';
 
 const INITIAL_ENVELOPES: Envelope[] = Array.from({ length: 100 }, (_, i) => ({
   id: i + 1,
@@ -58,6 +60,9 @@ const App: React.FC = () => {
   const [preferredName, setPreferredName] = useState<string | null>(() => localStorage.getItem(IDENTITY_KEY));
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('wins');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+    return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true';
+  });
   
   // Data State
   const [wins, setWins] = useState<Win[]>(() => getInitialState<Win[]>('wins', INITIAL_WINS));
@@ -85,6 +90,17 @@ const App: React.FC = () => {
   // New Identity State
   const [nameInput, setNameInput] = useState('');
 
+  // --- Daily Reset Effect ---
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const lastVisit = localStorage.getItem(LAST_VISIT_KEY);
+
+    if (lastVisit !== today) {
+      setWins(prevWins => prevWins.map(win => ({ ...win, completed: false })));
+      localStorage.setItem(LAST_VISIT_KEY, today);
+    }
+  }, []);
+
   // --- Persistence Effect ---
   useEffect(() => {
     const stateToSave = {
@@ -101,6 +117,15 @@ const App: React.FC = () => {
       localStorage.removeItem(IDENTITY_KEY);
     }
   }, [preferredName]);
+
+  // Sidebar State Persistence
+  useEffect(() => {
+    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(isSidebarCollapsed));
+  }, [isSidebarCollapsed]);
+
+  const toggleSidebar = useCallback(() => {
+    setIsSidebarCollapsed(prev => !prev);
+  }, []);
 
   // --- Dynamic Greeting Logic ---
   const dynamicSubtext = useMemo(() => {
@@ -153,10 +178,22 @@ const App: React.FC = () => {
     setWins(prev => prev.map(w => {
       if (w.id === id) {
         const isNowCompleted = !w.completed;
+        const today = new Date().toISOString().split('T')[0];
+        let newHistory = w.completionHistory || [];
+
+        if (isNowCompleted) {
+          if (!newHistory.includes(today)) {
+            newHistory = [...newHistory, today];
+          }
+        } else {
+          newHistory = newHistory.filter(date => date !== today);
+        }
+
         return { 
           ...w, 
           completed: isNowCompleted,
-          streak: isNowCompleted ? w.streak + 1 : Math.max(0, w.streak - 1)
+          streak: isNowCompleted ? w.streak + 1 : Math.max(0, w.streak - 1),
+          completionHistory: newHistory
         };
       }
       return w;
@@ -367,6 +404,7 @@ const App: React.FC = () => {
             envelopes={envelopes} 
             toggleEnvelope={toggleEnvelope} 
             currency={currency} 
+            setCurrency={setCurrency}
             expenses={expenses}
             setExpenses={setExpenses}
             incomeRecords={incomeRecords}
@@ -533,6 +571,8 @@ const App: React.FC = () => {
         focusXP={focusStats.xp}
         xpToNext={focusStats.xpToNext}
         onLogout={handleTerminateSession}
+        isSidebarCollapsed={isSidebarCollapsed}
+        toggleSidebar={toggleSidebar}
       >
         {renderContent()}
       </Layout>

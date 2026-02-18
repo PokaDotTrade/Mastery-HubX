@@ -578,8 +578,15 @@ const TradingJournal: React.FC<TradingJournalProps> = ({
               ) : (
                 <div className="bg-[#111a14] p-8 rounded-[40px] border border-white/5 relative h-44 flex flex-col justify-center transition-all hover:scale-[1.02] shadow-xl group">
                   <div className="absolute top-8 right-8 text-slate-800 group-hover:text-emerald-400/20 transition-colors"><span className="material-symbols-outlined text-3xl">monitoring</span></div>
-                  <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">PORTFOLIO DELTA</p>
-                  <h3 className={`text-4xl font-black tracking-tighter ${stats.totalPnL >= 0 ? 'text-[#30e86e]' : 'text-rose-500'}`}>{stats.totalPnL >= 0 ? '+' : ''}{activeAccount?.currency || '$'}${Math.abs(stats.totalPnL).toLocaleString()}</h3>
+                  <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">PORTFOLIO DATA</p>
+                   <div className="flex items-center gap-3">
+                      <span className={`material-symbols-outlined text-4xl ${stats.totalPnL >= 0 ? 'text-[#30e86e]' : 'text-rose-500'}`}>
+                          {stats.totalPnL >= 0 ? 'trending_up' : 'trending_down'}
+                      </span>
+                      <h3 className={`text-4xl font-black tracking-tighter ${stats.totalPnL >= 0 ? 'text-[#30e86e]' : 'text-rose-500'}`}>
+                          {activeAccount?.currency || '$'}{Math.abs(stats.totalPnL).toLocaleString()}
+                      </h3>
+                  </div>
                   <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mt-3">PERIOD P&L DISTRIBUTION</p>
                 </div>
               )}
@@ -1332,13 +1339,13 @@ const StatCard = ({ label, value, icon, color }: { label: string, value: any, ic
     slate: 'text-slate-400 bg-slate-400/10 border-slate-400/20',
   };
   return (
-    <div className={`glass p-6 rounded-[32px] border-white/5 flex items-center gap-6 ${colors[color]}`}>
+    <div className={`glass p-6 rounded-[32px] border-white/5 flex items-center gap-6 md:gap-4 ${colors[color]}`}>
       <div className="size-12 rounded-2xl bg-current/10 flex items-center justify-center shrink-0">
         <span className="material-symbols-outlined text-2xl text-current filled-icon">{icon}</span>
       </div>
-      <div>
-        <p className="text-xs font-black text-slate-500 uppercase tracking-widest">{label}</p>
-        <p className="text-2xl font-black text-white mt-1">{value}</p>
+      <div className="min-w-0">
+        <p className="text-xs md:text-[10px] font-black text-slate-500 uppercase tracking-widest">{label}</p>
+        <p className="text-2xl md:text-xl font-black text-white mt-1">{value}</p>
       </div>
     </div>
   );
