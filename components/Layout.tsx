@@ -23,7 +23,7 @@ const Layout: React.FC<LayoutProps> = ({
 
   return (
     <div className="min-h-screen bg-[#080d0a] text-[#f8faf9] flex justify-center">
-      <div className="w-full max-w-[1440px] flex flex-col md:flex-row relative">
+      <div className="w-full max-w-[1800px] flex flex-col md:flex-row relative">
         
         {/* Mobile Header */}
         <header className="sticky top-0 z-40 glass md:hidden w-full">
@@ -39,7 +39,7 @@ const Layout: React.FC<LayoutProps> = ({
         </header>
 
         {/* Desktop Sidebar - Persistent & Spacious */}
-        <aside className={`hidden md:flex flex-col h-screen sticky top-0 border-r border-white/5 p-8 space-y-8 bg-[#080d0a] shrink-0 transition-all duration-300 ease-in-out relative ${isSidebarCollapsed ? 'w-28' : 'w-80'}`}>
+        <aside className={`hidden md:flex flex-col h-screen sticky top-0 border-r border-white/5 p-6 space-y-6 bg-[#080d0a] shrink-0 transition-all duration-300 ease-in-out relative ${isSidebarCollapsed ? 'w-28' : 'w-80'}`}>
           <button
             onClick={toggleSidebar}
             className="absolute top-8 -right-4 z-50 size-8 bg-[#111a14] border border-white/10 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:scale-110 transition-all active:scale-95"
@@ -66,7 +66,7 @@ const Layout: React.FC<LayoutProps> = ({
             )}
           </div>
           
-          <nav className="flex-1 flex flex-col gap-1 overflow-y-auto no-scrollbar">
+          <nav className="flex-1 flex flex-col gap-1 no-scrollbar">
             <DesktopNavItem icon="grid_view" label="Dashboard" active={activeTab === 'wins'} onClick={() => setActiveTab('wins')} isCollapsed={isSidebarCollapsed} />
             <DesktopNavItem icon="calendar_today" label="Agenda" active={activeTab === 'schedule'} onClick={() => setActiveTab('schedule')} isCollapsed={isSidebarCollapsed} />
             <DesktopNavItem icon="monitoring" label="Trade Journal" active={activeTab === 'trading'} onClick={() => setActiveTab('trading')} isCollapsed={isSidebarCollapsed} />
@@ -75,7 +75,7 @@ const Layout: React.FC<LayoutProps> = ({
             <DesktopNavItem icon="account_balance_wallet" label="Visual Budget" active={activeTab === 'budget'} onClick={() => setActiveTab('budget')} isCollapsed={isSidebarCollapsed} />
             <DesktopNavItem icon="auto_stories" label="Future Letters" active={activeTab === 'future'} onClick={() => setActiveTab('future')} isCollapsed={isSidebarCollapsed} />
             <DesktopNavItem icon="favorite" label="Bible Scriptures" active={activeTab === 'scriptures'} onClick={() => setActiveTab('scriptures')} isCollapsed={isSidebarCollapsed} />
-            <div className="h-px bg-white/5 my-2 mx-4"></div>
+            <div className="h-px bg-white/5 my-1 mx-4"></div>
             <DesktopNavItem icon="psychology" label="Live Coach" active={activeTab === 'coach'} onClick={() => setActiveTab('coach')} isCollapsed={isSidebarCollapsed} />
           </nav>
 
@@ -120,7 +120,7 @@ const Layout: React.FC<LayoutProps> = ({
         </aside>
 
         {/* Main Content Area */}
-        <main className="flex-1 pb-32 md:pb-12 md:pt-12 px-5 md:px-12 lg:px-16 overflow-y-auto no-scrollbar">
+        <main className="flex-1 pb-32 md:pb-12 md:pt-12 px-5 md:px-8 overflow-y-auto no-scrollbar">
           <div className="max-w-[1100px] mx-auto">
             <div className="hidden md:block mb-12">
                <h1 className="text-4xl font-black font-display tracking-tight text-white">{title}</h1>
@@ -168,7 +168,7 @@ const NavItem = ({ icon, label, active, onClick }: { icon: string, label: string
 const DesktopNavItem = ({ icon, label, active, onClick, isCollapsed }: { icon: string, label: string, active: boolean, onClick: () => void, isCollapsed: boolean }) => (
   <button 
     onClick={onClick}
-    className={`flex items-center gap-5 p-4 rounded-[24px] transition-all group ${active ? 'bg-emerald-400/10 text-emerald-400 shadow-[inset_0_0_15px_rgba(48,232,110,0.05)]' : 'text-slate-400 hover:bg-white/5 hover:text-white'} ${isCollapsed ? 'justify-center' : ''}`}
+    className={`flex items-center gap-5 p-3 rounded-2xl transition-all group ${active ? 'bg-emerald-400/10 text-emerald-400 shadow-[inset_0_0_15px_rgba(48,232,110,0.05)]' : 'text-slate-400 hover:bg-white/5 hover:text-white'} ${isCollapsed ? 'justify-center' : ''}`}
     title={label}
   >
     <div className={`p-2 rounded-xl transition-all ${active ? 'bg-emerald-400/10' : 'bg-transparent group-hover:bg-white/5'}`}>
