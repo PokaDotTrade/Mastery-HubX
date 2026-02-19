@@ -3,6 +3,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Win, MasteryHabit, FutureLetter, TradingAccount, Trade, ScheduleTask, Devotion } from '../types.ts';
 import { DEVOTIONS } from '../constants.tsx';
 import VoiceButton from './VoiceButton.tsx';
+import HourglassCountdown from './HourglassCountdown.tsx';
 
 interface DashboardProps {
   wins: Win[];
@@ -29,9 +30,23 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [subjectInput, setSubjectInput] = useState('');
   const [durationInput, setDurationInput] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [nyTime, setNyTime] = useState('');
+
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    const updateTimes = () => {
+      const now = new Date();
+      setCurrentTime(now);
+      setNyTime(now.toLocaleTimeString('en-US', {
+        timeZone: 'America/New_York',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      }));
+    };
+    
+    updateTimes(); // Initial call
+    const timer = setInterval(updateTimes, 60000);
     return () => clearInterval(timer);
   }, []);
 
@@ -204,9 +219,12 @@ const Dashboard: React.FC<DashboardProps> = ({
       <section className="animate-fade-in-up">
         <div className="flex justify-between items-center mb-6 px-1">
           <h2 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">Daily Agenda Highlight</h2>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-              {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+          <div className="flex items-center gap-4">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+              Local: <span className="text-slate-400">{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+            </span>
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+              NY: <span className="text-slate-400">{nyTime}</span>
             </span>
           </div>
         </div>
@@ -412,6 +430,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
               </button>
             ))}
+          </div>
+          <div className="mt-10">
+            <HourglassCountdown />
           </div>
         </section>
       </div>

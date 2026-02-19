@@ -17,7 +17,6 @@ import { getADHDCoachMessage } from './services/geminiService.ts';
 
 const STORAGE_KEY = 'mastery_hub_v1_state';
 const IDENTITY_KEY = 'mastery_hub_identity_pref_v1';
-const LAST_VISIT_KEY = 'mastery_hub_last_visit_v1';
 const SIDEBAR_COLLAPSED_KEY = 'mastery_hub_sidebar_collapsed_v1';
 
 const INITIAL_ENVELOPES: Envelope[] = Array.from({ length: 100 }, (_, i) => ({
@@ -92,13 +91,13 @@ const App: React.FC = () => {
 
   // --- Daily Reset Effect ---
   useEffect(() => {
+    // On app load, determine "completed" status for today based on permanent history
     const today = new Date().toISOString().split('T')[0];
-    const lastVisit = localStorage.getItem(LAST_VISIT_KEY);
-
-    if (lastVisit !== today) {
-      setWins(prevWins => prevWins.map(win => ({ ...win, completed: false })));
-      localStorage.setItem(LAST_VISIT_KEY, today);
-    }
+    setWins(prevWins => prevWins.map(win => ({
+      ...win,
+      completed: (win.completionHistory || []).includes(today)
+    })));
+    // The destructive daily reset is removed. LAST_VISIT_KEY is no longer needed for this.
   }, []);
 
   // --- Persistence Effect ---
