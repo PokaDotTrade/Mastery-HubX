@@ -26,8 +26,8 @@ const INITIAL_ENVELOPES: Envelope[] = Array.from({ length: 100 }, (_, i) => ({
 }));
 
 const INITIAL_ACCOUNTS: TradingAccount[] = [
-  { id: 'acc_1', name: 'Master Live', type: 'Live', balance: 5000, equity: 5000, currency: '$', isPrimary: true },
-  { id: 'acc_2', name: 'FTMO Challenge', type: 'Prop Firm', balance: 100000, equity: 100000, currency: '$', isPrimary: false, phase: 'Phase 1', targetProfitPct: 10, dailyDrawdownPct: 5, maxDrawdownPct: 10, initialPhaseBalance: 100000, startOfDayBalance: 100000, highestEquity: 100000, lastUpdateDate: new Date().toISOString().split('T')[0] },
+  { id: 'acc_1', name: 'Master Live', type: 'Live', balance: 5000, currency: '$', isPrimary: true },
+  { id: 'acc_2', name: 'FTMO Challenge', type: 'Prop Firm', balance: 100000, currency: '$', isPrimary: false, phase: 'Phase 1', targetProfitPct: 10, dailyDrawdownPct: 5, maxDrawdownPct: 10, initialPhaseBalance: 100000 },
 ];
 
 const INITIAL_LETTERS: FutureLetter[] = [
@@ -88,45 +88,6 @@ const App: React.FC = () => {
 
   // New Identity State
   const [nameInput, setNameInput] = useState('');
-
-  // --- Daily Reset & Account Initialization Effect ---
-  useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
-    const updatedAccounts = accounts.map(acc => {
-      const newAcc = { ...acc };
-      let needsUpdate = false;
-
-      // Initialize missing fields for backward compatibility
-      if (typeof newAcc.equity !== 'number') {
-        newAcc.equity = newAcc.balance;
-        needsUpdate = true;
-      }
-      if (typeof newAcc.highestEquity !== 'number') {
-        newAcc.highestEquity = newAcc.equity;
-        needsUpdate = true;
-      }
-
-      // Daily Reset Logic
-      if (newAcc.lastUpdateDate !== today) {
-        newAcc.lastUpdateDate = today;
-        newAcc.startOfDayBalance = newAcc.equity; // Use equity for start of day
-        needsUpdate = true;
-      }
-      
-      // Initialize start of day balance if it's missing
-      if (typeof newAcc.startOfDayBalance !== 'number') {
-        newAcc.startOfDayBalance = newAcc.equity;
-        needsUpdate = true;
-      }
-
-      return needsUpdate ? newAcc : acc;
-    });
-
-    // Check if there were any actual changes to avoid an infinite loop
-    if (JSON.stringify(updatedAccounts) !== JSON.stringify(accounts)) {
-      setAccounts(updatedAccounts);
-    }
-  }, []); // Run once on load
 
   // --- Daily Reset Effect ---
   useEffect(() => {
@@ -296,19 +257,11 @@ const App: React.FC = () => {
   const handleAddTrade = useCallback((newTrade: Trade) => {
     setTrades(prev => [newTrade, ...prev]);
     if (newTrade.accountId) {
-      setAccounts(prev => prev.map(acc => {
-        if (acc.id === newTrade.accountId) {
-          const newBalance = acc.balance + newTrade.pnl;
-          const newEquity = acc.equity + newTrade.pnl;
-          return {
-            ...acc,
-            balance: newBalance,
-            equity: newEquity,
-            highestEquity: Math.max(acc.highestEquity || newEquity, newEquity),
-          };
-        }
-        return acc;
-      }));
+      setAccounts(prev => prev.map(acc => 
+        acc.id === newTrade.accountId 
+        ? { ...acc, balance: acc.balance + newTrade.pnl } 
+        : acc
+      ));
     }
   }, []);
 
@@ -318,18 +271,11 @@ const App: React.FC = () => {
       if (!tradeToDelete) return prev;
       
       if (tradeToDelete.accountId) {
-        setAccounts(accs => accs.map(acc => {
-          if (acc.id === tradeToDelete.accountId) {
-            const newBalance = acc.balance - tradeToDelete.pnl;
-            const newEquity = acc.equity - tradeToDelete.pnl;
-            return {
-              ...acc,
-              balance: newBalance,
-              equity: newEquity,
-            };
-          }
-          return acc;
-        }));
+        setAccounts(accs => accs.map(acc => 
+          acc.id === tradeToDelete.accountId 
+          ? { ...acc, balance: acc.balance - tradeToDelete.pnl } 
+          : acc
+        ));
       }
       return prev.filter(t => t.id !== id);
     });

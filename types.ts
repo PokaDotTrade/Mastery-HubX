@@ -90,29 +90,15 @@ export interface ScheduleTask {
   estimatedExpiryDate?: string;
 }
 
-export type Phase = 'Phase 1' | 'Phase 2' | 'Funded';
-
-export interface PhaseConfig {
-  maxRiskPerTradePct: number;
-  dailyDrawdownPct: number;
-  maxDrawdownPct: number;
-}
-
-export type PhaseSettings = Record<Phase, PhaseConfig>;
-
 export interface TradingAccount {
   id: string;
   name: string;
   type: 'Live' | 'Prop Firm' | 'Demo';
   balance: number;
-  equity: number;
   currency: string;
   isPrimary: boolean;
-  startOfDayBalance?: number;
-  highestEquity?: number;
-  lastUpdateDate?: string; // YYYY-MM-DD
   // Prop Firm specific fields
-  phase?: Phase;
+  phase?: 'Phase 1' | 'Phase 2' | 'Funded';
   targetProfitPct?: number;
   dailyDrawdownPct?: number;
   maxDrawdownPct?: number;
@@ -146,7 +132,6 @@ export interface Trade {
   image?: string;
   strategyId?: string;
   accountId?: string;
-  lotSize?: number;
 }
 
 export interface Strategy {
