@@ -1,10 +1,11 @@
 
 import React, { useState, useMemo, useRef } from 'react';
 import { ResponsiveContainer, XAxis, YAxis, Tooltip, AreaChart, Area, CartesianGrid, LineChart, Line } from 'recharts';
-import { Trade, Strategy, TradingAccount } from '../types';
+import { Trade, Strategy, TradingAccount, Phase } from '../types';
 // @ts-ignore - Browser compatible jsPDF
 import { jsPDF } from 'jspdf';
 import { CURRENCY_OPTIONS } from '../constants.tsx';
+import RiskControlCenter from './RiskControlCenter.tsx';
 
 interface TradingJournalProps {
   trades: Trade[];
@@ -72,7 +73,7 @@ const TradingJournal: React.FC<TradingJournalProps> = ({
   const [newAccType, setNewAccType] = useState<'Live' | 'Prop Firm' | 'Demo'>('Live');
   const [newAccBalance, setNewAccBalance] = useState('');
   const [newAccCurrency, setNewAccCurrency] = useState('$');
-  const [newAccPhase, setNewAccPhase] = useState<'Phase 1' | 'Phase 2' | 'Funded'>('Phase 1');
+  const [newAccPhase, setNewAccPhase] = useState<Phase>('Phase 1');
   const [newAccTarget, setNewAccTarget] = useState('');
   const [newAccDailyDD, setNewAccDailyDD] = useState('');
   const [newAccMaxDD, setNewAccMaxDD] = useState('');
@@ -119,8 +120,12 @@ const TradingJournal: React.FC<TradingJournalProps> = ({
       name: newAccName,
       type: newAccType,
       balance: balance,
+      equity: balance,
       currency: newAccCurrency,
       isPrimary: accounts.length === 0,
+      lastUpdateDate: new Date().toISOString().split('T')[0],
+      startOfDayBalance: balance,
+      highestEquity: balance,
     };
 
     if (newAccType === 'Prop Firm') {
@@ -445,11 +450,22 @@ const TradingJournal: React.FC<TradingJournalProps> = ({
             {activeAccount?.type === 'Prop Firm' && (
               <div className="flex justify-center pt-2">
                 <div className="glass px-12 py-6 rounded-[32px] border-white/5 flex items-center gap-12 relative overflow-hidden bg-white/[0.01]">
-                  <PhaseStep icon="looks_one" label="EVALUATION" sub="PHASE 1" active={activeAccount?.phase === 'Phase 1'} completed={activeAccount?.phase === 'Phase 2' || activeAccount?.phase === 'Funded'} />
-                  <div className="w-12 h-px bg-white/10"></div>
-                  <PhaseStep icon="looks_two" label="VERIFICATION" sub="PHASE 2" active={activeAccount?.phase === 'Phase 2'} completed={activeAccount?.phase === 'Funded'} />
-                  <div className="w-12 h-px bg-white/10"></div>
-                  <PhaseStep icon="verified_user" label="PROFESSIONAL" sub="FUNDED" active={activeAccount?.phase === 'Funded'} completed={false} />
+                  {(['Phase 1', 'Phase 2', 'Funded'] as Phase[]).map((phase, index, arr) => {
+                    const isCompleted = (activeAccount?.phase === 'Phase 2' && phase === 'Phase 1') || (activeAccount?.phase === 'Funded' && (phase === 'Phase 1' || phase === 'Phase 2'));
+                    return (
+                      <React.Fragment key={phase}>
+                        <PhaseStep
+                          icon={phase === 'Phase 1' ? 'looks_one' : phase === 'Phase 2' ? 'looks_two' : 'verified_user'}
+                          label={phase.replace(' ', '').toUpperCase()}
+                          sub={phase}
+                          active={activeAccount?.phase === phase}
+                          completed={isCompleted}
+                          onClick={() => onUpdateAccount?.(activeAccount!.id, { phase })}
+                        />
+                        {index < arr.length - 1 && <div className="w-12 h-px bg-white/10"></div>}
+                      </React.Fragment>
+                    )
+                  })}
                 </div>
               </div>
             )}
@@ -530,7 +546,7 @@ const TradingJournal: React.FC<TradingJournalProps> = ({
                       </div>
                       <div>
                          <p className="text-[8px] font-black text-slate-500 uppercase">Equity</p>
-                         <p className="text-xs font-black text-emerald-400">{activeAccount?.currency}{activeAccount?.balance.toLocaleString()}</p>
+                         <p className="text-xs font-black text-emerald-400">{activeAccount?.currency}{activeAccount?.equity.toLocaleString()}</p>
                       </div>
                    </div>
                 </div>
@@ -591,6 +607,8 @@ const TradingJournal: React.FC<TradingJournalProps> = ({
                 </div>
               )}
             </div>
+
+            <RiskControlCenter activeAccount={activeAccount} strategies={strategies} />
 
             <div className="bg-[#111a14] rounded-[48px] p-10 border border-white/5 relative overflow-hidden shadow-2xl">
               <div className="flex justify-end gap-6 mb-6">
@@ -987,16 +1005,16 @@ const TradingJournal: React.FC<TradingJournalProps> = ({
 
 // --- Helper & Sub-Components ---
 
-const PhaseStep = ({ icon, label, sub, active, completed }: { icon: string, label: string, sub: string, active: boolean, completed: boolean }) => (
-  <div className={`flex items-center gap-4 transition-all ${active ? 'opacity-100' : 'opacity-20'} ${completed ? 'grayscale' : ''}`}>
-    <div className={`size-12 rounded-2xl flex items-center justify-center border-2 ${active ? 'bg-emerald-400/10 text-emerald-400 border-emerald-400/20' : 'bg-white/5 text-slate-500 border-white/5'}`}>
+const PhaseStep = ({ icon, label, sub, active, completed, onClick }: { icon: string, label: string, sub: string, active: boolean, completed: boolean, onClick: () => void }) => (
+  <button onClick={onClick} className={`flex items-center gap-4 transition-all group ${active ? 'opacity-100' : 'opacity-20 hover:opacity-100'} ${completed ? 'grayscale' : ''}`}>
+    <div className={`size-12 rounded-2xl flex items-center justify-center border-2 transition-all ${active ? 'bg-emerald-400/10 text-emerald-400 border-emerald-400/20' : 'bg-white/5 text-slate-500 border-white/5 group-hover:border-emerald-400/20'}`}>
       <span className="material-symbols-outlined filled-icon text-2xl">{icon}</span>
     </div>
     <div>
-      <p className={`text-[10px] font-black uppercase tracking-widest ${active ? 'text-emerald-400' : 'text-slate-500'}`}>{label}</p>
+      <p className={`text-[10px] font-black uppercase tracking-widest transition-colors ${active ? 'text-emerald-400' : 'text-slate-500 group-hover:text-emerald-400'}`}>{label}</p>
       <p className="text-[9px] font-black text-slate-700 uppercase">{sub}</p>
     </div>
-  </div>
+  </button>
 );
 
 const TradeCard = ({ trade, currency, onDelete, onClick }: { trade: Trade, currency: string, onDelete: () => void, onClick: () => void }) => {

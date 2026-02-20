@@ -15,6 +15,7 @@ const SchedulePlanner: React.FC<SchedulePlannerProps> = ({ tasks, onToggleTask, 
   const [time, setTime] = useState('');
   const [priority, setPriority] = useState<Priority>('medium');
   const [category, setCategory] = useState('General');
+  const [expiryDate, setExpiryDate] = useState('');
   
   const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]);
 
@@ -41,11 +42,30 @@ const SchedulePlanner: React.FC<SchedulePlannerProps> = ({ tasks, onToggleTask, 
   }, []);
 
   const filteredTasks = useMemo(() => {
-    return tasks.filter(t => (t.date || new Date().toISOString().split('T')[0]) === selectedDate)
-      .sort((a, b) => {
-        if (a.timeStart !== b.timeStart) return a.timeStart.localeCompare(b.timeStart);
-        return priorityOrder[a.priority] - priorityOrder[b.priority];
+    const todayStr = new Date().toISOString().split('T')[0];
+    const isViewingToday = selectedDate === todayStr;
+
+    let tasksForView: ScheduleTask[];
+
+    if (isViewingToday) {
+      // For today's view, show today's tasks PLUS all incomplete tasks from the past.
+      const todaysTasks = tasks.filter(t => (t.date || todayStr) === selectedDate);
+      
+      const pastIncompleteTasks = tasks.filter(t => {
+        const taskDate = t.date || todayStr;
+        return taskDate < selectedDate && !t.completed;
       });
+
+      tasksForView = [...todaysTasks, ...pastIncompleteTasks];
+    } else {
+      // For historical or future views, just show that day's tasks.
+      tasksForView = tasks.filter(t => (t.date || todayStr) === selectedDate);
+    }
+    
+    return tasksForView.sort((a, b) => {
+      if (a.timeStart !== b.timeStart) return a.timeStart.localeCompare(b.timeStart);
+      return priorityOrder[a.priority] - priorityOrder[b.priority];
+    });
   }, [tasks, selectedDate]);
 
   const datesWithTasks = useMemo(() => {
@@ -64,10 +84,12 @@ const SchedulePlanner: React.FC<SchedulePlannerProps> = ({ tasks, onToggleTask, 
       priority,
       completed: false,
       category: category || 'General',
-      date: selectedDate
+      date: selectedDate,
+      estimatedExpiryDate: expiryDate || undefined,
     });
     setTitle('');
     setTime('');
+    setExpiryDate('');
     setIsAdding(false);
   };
 
@@ -175,6 +197,16 @@ const SchedulePlanner: React.FC<SchedulePlannerProps> = ({ tasks, onToggleTask, 
               </div>
             </div>
 
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Estimated Expiry Date (Optional)</label>
+              <input 
+                type="date" 
+                value={expiryDate}
+                onChange={(e) => setExpiryDate(e.target.value)}
+                className="w-full glass border-none rounded-2xl p-5 text-base font-bold focus:ring-1 focus:ring-emerald-400 outline-none text-slate-200 appearance-none bg-transparent"
+              />
+            </div>
+
             <button 
               type="submit"
               className="w-full py-6 bg-emerald-400 text-[#080d0a] font-black uppercase tracking-[0.3em] rounded-3xl shadow-2xl shadow-emerald-400/30 active:scale-95 transition-all hover:scale-[1.01]"
@@ -268,7 +300,17 @@ const TaskCard: React.FC<{ task: ScheduleTask, onToggle: () => void, onDelete: (
               {task.title}
             </p>
           </div>
-          <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mt-2 ml-1">{task.category}</p>
+          <div className="flex items-center gap-4 mt-2 ml-1">
+            <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em]">{task.category}</p>
+            {task.estimatedExpiryDate && (
+                <>
+                    <span className="size-1 rounded-full bg-slate-700"></span>
+                    <p className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em]">
+                        Expires: {new Date(task.estimatedExpiryDate).toLocaleDateString()}
+                    </p>
+                </>
+            )}
+          </div>
         </div>
       </div>
 

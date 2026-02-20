@@ -1,5 +1,5 @@
 
-import { Win, MasteryHabit, BudgetBucket, Trade, Strategy, ScheduleTask, Skill, PipelineProject, Devotion } from './types';
+import { Win, MasteryHabit, BudgetBucket, Trade, Strategy, ScheduleTask, Skill, PipelineProject, Devotion, PhaseSettings } from './types';
 
 export const CURRENCY_OPTIONS = [
   { code: 'USD', symbol: '$', label: 'USD ($)' },
@@ -11,6 +11,24 @@ export const CURRENCY_OPTIONS = [
   { code: 'CAD', symbol: 'C$', label: 'CAD (C$)' },
   { code: 'AUD', symbol: 'A$', label: 'AUD (A$)' },
 ];
+
+export const PHASE_SETTINGS: PhaseSettings = {
+  'Phase 1': {
+    maxRiskPerTradePct: 0.5,
+    dailyDrawdownPct: 5,
+    maxDrawdownPct: 10,
+  },
+  'Phase 2': {
+    maxRiskPerTradePct: 0.75,
+    dailyDrawdownPct: 5,
+    maxDrawdownPct: 10,
+  },
+  'Funded': {
+    maxRiskPerTradePct: 1,
+    dailyDrawdownPct: 4,
+    maxDrawdownPct: 8,
+  },
+};
 
 export const INITIAL_WINS: Win[] = [
   { id: '1', label: '60m Deep Work Block', icon: 'bolt', completed: false, color: 'blue', streak: 5 },
